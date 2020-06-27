@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import os.log
 
 class NotesTableViewController: UITableViewController {
 
@@ -168,16 +169,33 @@ class NotesTableViewController: UITableViewController {
     // MARK: NSCoding
     func saveNote() {
         
-        let isGoodSave = NSKeyedArchiver.archiveRootObject(notesCollection, toFile: Notes.ArchiveURL.path)
-        if !isGoodSave {
-            print("Error Saving Files....")
+        //let isGoodSave = NSKeyedArchiver.archiveRootObject(notesCollection, toFile: Notes.ArchiveURL.path)
+        do {
+            let data = try NSKeyedArchiver.archivedData(withRootObject: notesCollection, requiringSecureCoding: false)
+            try data.write(to: Notes.ArchiveURL)
+            os_log("Note saved", log: OSLog.default, type: .debug)
+        } catch {
+            os_log("Failed to save notes...", log: OSLog.default, type: .error)
         }
     }
     
     func loadSavedNotes() -> [Notes]? {
         
-        return NSKeyedUnarchiver.unarchiveObject(withFile: Notes.ArchiveURL.path) as? [Notes]
-        
+        //return NSKeyedUnarchiver.unarchiveObject(withFile: Notes.ArchiveURL.path) as? [Notes]
+        if let myData = NSData(contentsOf: Notes.ArchiveURL) {
+            do {
+                
+                let data = Data(referencing: myData)
+                
+                if let gotNote = try NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? [Notes] {
+                    return gotNote
+                }
+            } catch {
+                os_log("Couldn't read file.", log: OSLog.default, type: .error)
+                return nil
+            }
+        }
+        return nil
     }
 
 }

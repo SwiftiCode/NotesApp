@@ -7,8 +7,11 @@
 //
 
 import Foundation
+import os.log
 
 class Notes: NSObject, NSCoding {
+    static var supportsSecureCoding: Bool = false
+    
     
     // MARK: Types
     struct PropertyKey {
@@ -42,10 +45,15 @@ class Notes: NSObject, NSCoding {
     
     required convenience init?(coder aDecoder: NSCoder) {
         
-        let myTtitle = aDecoder.decodeObject(forKey: PropertyKey.titleKey) as! String
-        let myNote = aDecoder.decodeObject(forKey: PropertyKey.noteKey) as! String
+        //let myTtitle = aDecoder.decodeObject(forKey: PropertyKey.titleKey) as! String
+        //let myNote = aDecoder.decodeObject(forKey: PropertyKey.noteKey) as! String
+        guard let myNotesTitle = aDecoder.decodeObject(forKey: PropertyKey.titleKey) as? String else {
+            os_log("Unable to decode the title for Notes.", log: OSLog.default, type: .debug)
+            return nil
+        }
+        let myNotes = aDecoder.decodeObject(forKey: PropertyKey.noteKey) as! String
         
-        self.init(title: myTtitle, notes: myNote)
+        self.init(title: myNotesTitle, notes: myNotes)
     }
     
 }
